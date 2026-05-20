@@ -1,0 +1,39 @@
+# Local Codex workspace state
+.codex/
+
+# MATLAB generated files and caches
+*.asv
+*.m~
+*.autosave
+*.slxc
+*.mex*
+*.pcode
+codegen/
+slprj/
+
+# MATLAB project and test output
+*.log
+*.tmp
+*.bak
+*.fig
+*.mat
+*.dat
+*.bin
+*.raw
+*.h5
+*.hdf5
+*.tif
+*.tiff
+
+# Large/raw experiment data. Keep only explicit placeholders.
+Transcranial2512/data/*
+!Transcranial2512/data/.gitkeep
+
+# OS and editor noise
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+.vscode/
+.idea/
