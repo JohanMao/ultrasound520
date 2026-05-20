@@ -28,6 +28,8 @@ slprj/
 # Large/raw experiment data. Keep only explicit placeholders.
 Transcranial2512/data/*
 !Transcranial2512/data/.gitkeep
+Transcranial2512_engineering/data/*
+!Transcranial2512_engineering/data/.gitkeep
 
 # OS and editor noise
 .DS_Store
