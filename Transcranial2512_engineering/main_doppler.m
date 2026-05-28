@@ -16,16 +16,16 @@ fieldNames = fieldnames(loadedData);
 % clear tempData;% 清理中间大变量，释放内存
 if isfield(loadedData, 'IQData')
     IQ = loadedData.IQData;
-    fprintf('变量识别成功: IQData\n');
+    fprintf('Detected input variable: IQData\n');
 elseif isfield(loadedData, 'IQ')
     IQ = loadedData.IQ;
-    fprintf('变量识别成功: IQ\n');
+    fprintf('Detected input variable: IQ\n');
 elseif ~isempty(fieldNames)
     % 备选方案：抓取文件中的第一个变量
     IQ = loadedData.(fieldNames{1});
-    warning('未找到标准变量名，自动提取首个变量: %s', fieldNames{1});
+    warning('Standard input variable name not found. Using first variable: %s', fieldNames{1});
 else
-    error('错误：文件 %s 为空或不包含有效变量。', allFileNames{1});
+    error('Input file is empty or does not contain a valid variable: %s', allFileNames{1});
 end
 [nAxial, nLateral, nFrames] = size(IQ);
 pitch        = 0.2/1000; % 阵元间距
@@ -125,7 +125,7 @@ xlim([1, 300]); % 只看前60个足够，后面全是噪声
 set(gca, 'FontSize', 12, 'FontName', 'Times New Roman');
 
 % 输出命令行结果
-fprintf('✅ 自动计算最佳 SVD 高位截断值 = %d\n', cutoff_idx);
+fprintf('Auto-selected upper SVD cutoff = %d\n', cutoff_idx);
 
 % --- 设定起始补偿位置 ---
 startDepth_mm = 5; % 假设颅骨大约在 5mm 厚度，从 5mm 后开始补偿
@@ -224,7 +224,7 @@ axis image, colormap(gca,hot(128)),title(['Power Doppler'])
 clbar = colorbar;
 caxis([10 max(im.CData(:))*.9]);
 
-xlabel('Axias Distance(mm)')
+xlabel('Axial Distance(mm)')
 ylabel('Lateral Distance(mm)')
 set(gca,'FontSize',15,'FontWeight','bold');
 set(gca,'FontName','Times New Roman');
