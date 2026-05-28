@@ -1,42 +1,13 @@
 clear; clc; close all;
 
 projectName = 'Transcranial2512';
-expName     = '20250411flow_Result';
-baseDir     = 'D:\Codefield\ultrasound\Transcranial2512';
-% baseDir   = fileparts(mfilename('fullpath'))
-% if isempty(baseDir), baseDir = pwd; end
-
-workDir    = fullfile(baseDir,  'SR');
-dataDir    = fullfile(baseDir, 'data');
-
-addpath(genpath(baseDir));    % 把当前文件夹中的所有文件全部添加到搜索路径中
-% 检查路径是否存在
-if ~exist(dataDir, 'dir')
-    error('【错误】找不到输入文件夹：%s\n请检查 projectName 或数据位置！', dataDir);
-end
-% 结果保存路径
-localPath  = fullfile(workDir, 'Locals', expName);
-trackspath = fullfile(workDir, 'Tracks', expName);
-savingpath = fullfile(workDir, 'Mats',   expName);
-% 创建文件夹
-outputPaths = {localPath, trackspath, savingpath};
-for i = 1:length(outputPaths)
-    if ~exist(outputPaths{i}, 'dir')
-        mkdir(outputPaths{i});
-        fprintf('>>> 已创建文件夹: %s\n', outputPaths{i});
-    end
-end
-
-filePattern = fullfile(dataDir, '*.mat');    % fullfile用来自动拼接路径
-fileList = dir(filePattern);    % dir函数的作用是列出指定路径下的文件和文件夹内容
-if isempty(fileList)
-    error('【错误】在路径 [%s] 下未找到 .mat 文件！', dataDir);
-end
+expName     = '20250411flow';
+baseDir     = fileparts(mfilename('fullpath'));
+% 路径和输出目录创建统一交给 setupULMPaths，避免诊断脚本重复维护路径逻辑。
+[dataDir,localPath,trackspath,savingpath,fileList,allFileNames,nBuffers] = setupULMPaths(baseDir, expName);
 % T = struct2table(fileList);
 % disp(T);
 
-allFileNames = {fileList.name};
-nBuffers = length(allFileNames);
 targetFile = fullfile(dataDir, allFileNames{1}); 
 loadedData = load(targetFile);
 fieldNames = fieldnames(loadedData);
@@ -45,16 +16,16 @@ fieldNames = fieldnames(loadedData);
 % clear tempData;% 清理中间大变量，释放内存
 if isfield(loadedData, 'IQData')
     IQ = loadedData.IQData;
-    fprintf('变量识别成功: IQData\n');
+    fprintf('Detected input variable: IQData\n');
 elseif isfield(loadedData, 'IQ')
     IQ = loadedData.IQ;
-    fprintf('变量识别成功: IQ\n');
+    fprintf('Detected input variable: IQ\n');
 elseif ~isempty(fieldNames)
     % 备选方案：抓取文件中的第一个变量
     IQ = loadedData.(fieldNames{1});
-    warning('未找到标准变量名，自动提取首个变量: %s', fieldNames{1});
+    warning('Standard input variable name not found. Using first variable: %s', fieldNames{1});
 else
-    error('错误：文件 %s 为空或不包含有效变量。', allFileNames{1});
+    error('Input file is empty or does not contain a valid variable: %s', allFileNames{1});
 end
 [nAxial, nLateral, nFrames] = size(IQ);
 pitch        = 0.2/1000; % 阵元间距
@@ -154,7 +125,7 @@ xlim([1, 300]); % 只看前60个足够，后面全是噪声
 set(gca, 'FontSize', 12, 'FontName', 'Times New Roman');
 
 % 输出命令行结果
-fprintf('✅ 自动计算最佳 SVD 高位截断值 = %d\n', cutoff_idx);
+fprintf('Auto-selected upper SVD cutoff = %d\n', cutoff_idx);
 
 % --- 设定起始补偿位置 ---
 startDepth_mm = 5; % 假设颅骨大约在 5mm 厚度，从 5mm 后开始补偿
@@ -253,7 +224,7 @@ axis image, colormap(gca,hot(128)),title(['Power Doppler'])
 clbar = colorbar;
 caxis([10 max(im.CData(:))*.9]);
 
-xlabel('Axias Distance(mm)')
+xlabel('Axial Distance(mm)')
 ylabel('Lateral Distance(mm)')
 set(gca,'FontSize',15,'FontWeight','bold');
 set(gca,'FontName','Times New Roman');

@@ -13,6 +13,7 @@ end
 interp_factor = 1/ULM.max_linking_distance/ULM.res*.8;% 补帧因子
 smooth_factor = 20;% 平滑因子
 numberOfFrames = ULM.size(3);
+FR = 1 / ULM.scale(3);
 
 minFrame = min(MatTracking(:,4));
 MatTracking(:,4) = MatTracking(:,4) - minFrame + 1;
@@ -23,12 +24,10 @@ Points = arrayfun(@(i) [MatTracking(index_Frame{i},2),MatTracking(index_Frame{i}
     [1:numberOfFrames],'UniformOutput',false);% 拿“真实坐标”
 % ,MatTracking(index_Frame{i},5),MatTracking(index_Frame{i},6)
 debug = false;
-tic
 [ Simple_Tracks,Adjacency_Tracks ] = simpletracker(Points,...
     'MaxLinkingDistance', ULM.max_linking_distance, ...
     'MaxGapClosing', ULM.max_gap_closing, ...
     'Debug', debug);
-toc
 n_tracks = numel(Simple_Tracks);% 共找出了多少条微泡轨迹
 all_points = vertcat(Points{:});% 垂直拼接（Vertical Concatenate）
 
@@ -40,7 +39,36 @@ for i_track = 1:n_tracks
     idFrame = MatTracking(track_id,4);
     intBubble = MatTracking(track_id,1);
     track_points = cat(2,all_points(track_id,:),idFrame,intBubble);
-    if length(track_points(:,1))>ULM.min_length
+    
+    if length(track_points(:,1)) > ULM.min_length
+        
+%         % 加速度约束 (Acceleration Constraint)
+%         v_vec = diff(track_points(:,1:2), 1, 1); 
+%         v = sqrt(sum(v_vec.^2, 2));
+%         v_trim_mean = trimmean(v, 20);
+% 
+%         a_thr = 1.5 * max(v_trim_mean, eps) * FR;
+%         a = abs(diff(v)) * FR;
+% 
+%         if sum(a > a_thr) > max(2, round(0.1 * numel(a)))
+%             continue;
+%         end
+        
+%         % 方向约束 (Direction Constraint), 微泡不能发生超过 90 度的锐角折返 
+%         is_valid_direction = true;
+%         for j = 1:(size(v_vec, 1) - 1)
+%             v1 = v_vec(j, :);
+%             v2 = v_vec(j+1, :);
+%             cos_theta = dot(v1, v2) / (norm(v1) * norm(v2) + eps);
+%             if cos_theta < 0 % 余弦值小于0意味着夹角大于90度
+%                 is_valid_direction = false;
+%                 break;
+%             end
+%         end
+%         if ~is_valid_direction
+%             continue; 
+%         end
+        
         Tracks_raw{count}=track_points;
         count=count+1;
     end

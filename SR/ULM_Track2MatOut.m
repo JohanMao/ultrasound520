@@ -101,18 +101,13 @@ switch mode
             pos_z_round = round(Tracks{itrack}(:,1).*res);
             pos_x_round = round(Tracks{itrack}(:,2).*res);
             
-            % intBubble = smooth(Tracks{itrack}(:,6),10);
-            % 修改后的代码 (使用内置的移动平均平滑)
-            intBubble = smoothdata(Tracks{itrack}(:,6), 'movmean', 10);
+            intBubble = smooth(Tracks{itrack}(:,6),10);
             if strcmp(mode,'2D_velmean')
                 velnorm = Tracks{itrack}(:,3);
             else
-%                  velnorm = smooth(vecnorm(Tracks{itrack}(:,3:4),2,2),10); % velocity is smoothed
-                 velnorm = smoothdata(vecnorm(Tracks{itrack}(:,3:4),2,2), 'movmean', 10);
-%                  velnorm_z = smooth(Tracks{itrack}(:,3),10);
-%                  velnorm_x = smooth(Tracks{itrack}(:,4),10);
-                velnorm_z = smoothdata(Tracks{itrack}(:,3), 'movmean', 10);
-                velnorm_x = smoothdata(Tracks{itrack}(:,4), 'movmean', 10);
+                 velnorm = smooth(vecnorm(Tracks{itrack}(:,3:4),2,2),10); % velocity is smoothed
+                 velnorm_z = smooth(Tracks{itrack}(:,3),10);
+                 velnorm_x = smooth(Tracks{itrack}(:,4),10);
             end
             
             if strcmp(mode,'2D_vel_z')

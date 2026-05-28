@@ -20,9 +20,7 @@ function [zc,xc] = localizeRadialSymmetry(I,fwhmz,fwhmx)
 % lines through any point with orientation parallel to the local gradient.
 % The origin is the point that will minimize the distance between itself
 % and all such lines.
-% 具有完美径向对称性的函数的梯度将指向原点。
-% 因此，我们取局部梯度，并通过任意一点构造方向与局部梯度平行的直线。
-% 原点是能将自身与所有此类直线之间距离最小化的点。
+%
 % INPUTS:
 %       - I : 2D intensity distribution
 %        Size need not be an odd number of pixels along each dimension
@@ -48,19 +46,19 @@ dIdu = I(1:Nz-1,2:Nx)-I(2:Nz,1:Nx-1);% Gradient along the u vector
 dIdv = I(1:Nz-1,1:Nx-1)-I(2:Nz,2:Nx);% Gradient along the v vector
 
 % Smoothing the gradient of the I window
-h = ones(3)/9;% 均值滤波器
+h = ones(3)/9;
 fdu = conv2(dIdu, h, 'same');% Convolution of the gradient with a simple averaging filter
-fdv = conv2(dIdv, h, 'same');% 二维卷积，把窗口内 9 个像素的值加起来除以 9
-dImag2 = fdu.*fdu + fdv.*fdv; % Squared gradient magnitude 勾股定理
+fdv = conv2(dIdv, h, 'same');
+dImag2 = fdu.*fdu + fdv.*fdv; % Squared gradient magnitude
 
 % Slope of the gradient . Please refer to appendix 2 of the publication attached to this code for basis/orientation
-m = -(fdv + fdu) ./ (fdu-fdv);% 斜率
+m = -(fdv + fdu) ./ (fdu-fdv);
 
 % Check if m is NaN (which can happen when fdu=fdv). In this case, replace with the un-smoothed gradient.
 NNanm = sum(isnan(m(:)));
 if NNanm > 0
     unsmoothm = (dIdv + dIdu) ./ (dIdu-dIdv);
-    m(isnan(m))=unsmoothm(isnan(m));%大部分地方是高质量的平滑斜率，个别坏点用原始斜率顶替
+    m(isnan(m))=unsmoothm(isnan(m));
 end
 
 % If it's still NaN, replace with zero and we'll deal with this later
@@ -71,22 +69,21 @@ end
 
 % Check if m is inf (which can happen when fdu=fdv).
 try
-    m(isinf(m))=10*max(m(~isinf(m)));%找出当前所有正常斜率里的最大值，然后乘以 10
+    m(isinf(m))=10*max(m(~isinf(m)));
 catch
     % Replace m with the unsmoothed gradient
     m = (dIdv + dIdu) ./ (dIdu-dIdv);
 end
 
 % Calculate the z intercept of the line of slope m that goes through each grid midpoint
-b = zm - m.*xm; % y = kx+b
+b = zm - m.*xm;
 
 % Weight the intensity by square of gradient magnitude and inverse
 % distance to gradient intensity centroid. This will increase the intensity of areas close to the initial guess
-% 找这 16 条线交汇最密集的那个点。那个点就是微泡的亚像素中心。
 sdI2 = sum(dImag2(:));
-zcentroid = sum(sum(dImag2.*zm))/sdI2;% Initial guess of the centroid in z纵向重心
-xcentroid = sum(sum(dImag2.*xm))/sdI2;% Initial guess of the centroid in x横向重心
-w  = dImag2./sqrt((zm-zcentroid).*(zm-zcentroid)+(xm-xcentroid).*(xm-xcentroid));% 权重 距离远近/梯度强度
+zcentroid = sum(sum(dImag2.*zm))/sdI2;% Initial guess of the centroid in z
+xcentroid = sum(sum(dImag2.*xm))/sdI2;% Initial guess of the centroid in x
+w  = dImag2./sqrt((zm-zcentroid).*(zm-zcentroid)+(xm-xcentroid).*(xm-xcentroid));
 
 % least-squares minimization to determine the translated coordinate
 % system origin (xc, yc) such that lines y = mx+b have
@@ -102,13 +99,13 @@ function [zc,xc] = lsradialcenterfit(m, b, w)
 
     % inputs m, b, w are defined on a grid
     % w are the weights for each point
-    wm2p1 = w./(m.*m+1); % 几何缩放
+    wm2p1 = w./(m.*m+1);
     sw  = sum(sum(wm2p1));
-    smmw = sum(sum(m.*m.*wm2p1)); % 斜率平方的加权总和
-    smw  = sum(sum(m.*wm2p1)); % 斜率的加权总和
-    smbw = sum(sum(m.*b.*wm2p1));% 斜率与截距乘积的加权总和
-    sbw  = sum(sum(b.*wm2p1));% 截距的加权总和
-    det = smw*smw - smmw*sw;% 计算系数矩阵的行列式
+    smmw = sum(sum(m.*m.*wm2p1));
+    smw  = sum(sum(m.*wm2p1));
+    smbw = sum(sum(m.*b.*wm2p1));
+    sbw  = sum(sum(b.*wm2p1));
+    det = smw*smw - smmw*sw;
     xc = (smbw*sw - smw*sbw)/det;    % relative to image center
     zc = (smbw*smw - smmw*sbw)/det; % relative to image center
 
